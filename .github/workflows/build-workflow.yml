@@ -1,0 +1,50 @@
+# Name of workflow to be displyed on Github Console
+name: Multi-Docker-Pipeline
+
+# Triggers the workflow on separate events 
+on:
+  push:
+    # Trigger the worflow on push event for all branches
+    branches:
+      -  main
+      -  feature
+  pull_request:
+    types:
+      - opened
+    # Trigger the worflow on pull request event for feature branch
+    branches:
+      - feature
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+    # "build" workflow
+    build-test:
+      runs-on: ubuntu-latest
+  
+      steps:
+        - uses: actions/checkout@v3
+  
+        - name: Build the Docker image
+          run: docker build -t mjsydney23/client-docker -f ./client/Dockerfile.dev ./client
+  
+        - name: Test the Docker Image
+          run: docker run -e CI=true mjsydney23/client-docker npm run test
+    
+    # "deploy" workflow
+    deploy:
+      runs-on: ubuntu-latest
+      if: github.ref == 'refs/heads/main'
+      steps:
+        - uses: actions/checkout@v3
+  
+        - name: Build the Docker image for client
+          run: docker build -t mjsydney23/multi-client ./client
+        
+        - name: Build the Docker image for server
+          run: docker build -t mjsydney23/multi-server ./server
+
+        - name: Build the Docker image for worker
+          run: docker build -t mjsydney23/multi-worker ./worker
+        
+        - name: Build the Docker image for nginx
+          run: docker build -t mjsydney23/multi-nginx ./nginx
