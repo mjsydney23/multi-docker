@@ -20,7 +20,6 @@ jobs:
     # "build" workflow
     build-test:
       runs-on: ubuntu-latest
-  
       steps:
         - uses: actions/checkout@v3
   
@@ -29,9 +28,12 @@ jobs:
   
         - name: Test the Docker Image
           run: docker run -e CI=true mjsydney23/client-docker npm run test
+        
+        # Dev build and tests for server, worker and nginx can be added here
     
     # "deploy" workflow
     deploy:
+      needs: build-test
       runs-on: ubuntu-latest
       if: github.ref == 'refs/heads/main'
       steps:
@@ -62,7 +64,7 @@ jobs:
           uses: docker/build-push-action@v2
           with:
             context: ./client
-            file: Dockerfile
+            file: ./client/Dockerfile
             push: true
             tags: mjsydney23/multi-client:latest
         
@@ -70,7 +72,7 @@ jobs:
           uses: docker/build-push-action@v2
           with:
             context: ./server
-            file: Dockerfile
+            file: ./server/Dockerfile
             push: true
             tags: mjsydney23/multi-server:latest
         
@@ -78,7 +80,7 @@ jobs:
           uses: docker/build-push-action@v2
           with:
             context: ./worker
-            file: Dockerfile
+            file: ./worker/Dockerfile
             push: true
             tags: mjsydney23/multi-worker:latest
         
@@ -86,6 +88,6 @@ jobs:
           uses: docker/build-push-action@v2
           with:
             context: ./nginx
-            file: Dockerfile
+            file: ./nginx/Dockerfile
             push: true
             tags: mjsydney23/multi-nginx:latest
